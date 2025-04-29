@@ -1,0 +1,11 @@
+storage_type: Directory
+
+Directory:
+path: "C:/Users/steev/guardian_files"
+
+MySql:
+  host: "localhost"
+  port: 3306
+  username: "guardian_user"
+  password: "secret"
+  database: "guardian_db"
