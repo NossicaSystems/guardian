@@ -1,8 +1,7 @@
-use std::fs;
-use std::fs::File;
-use std::path::Path;
-use regex::Regex;
 use crate::data::db::StorageBackend;
+use regex::Regex;
+use std::fs;
+use std::path::Path;
 
 pub struct DirectoryBackend {
     pub path: String,
@@ -10,10 +9,13 @@ pub struct DirectoryBackend {
 
 impl StorageBackend for DirectoryBackend {
     fn save_file(&self, file_name: &str) -> Result<(), Box<dyn std::error::Error>> {
-        let full_path = format!("{}/{}", self.path, file_name);
-        println!("full path {}", full_path);
+        // path is the repo location
+        let path = Path::new(file_name);
+        let file_name_input = path.file_name().unwrap().to_str().unwrap();
 
-        let base_name = file_name.to_string() + "_";
+        println!("repo path {} file to save {}", self.path, file_name_input);
+
+        // check how many other versions of this file are present
         let re = Regex::new(r"^test\.txt_(\d+)$").unwrap();
 
         let mut max_num = 0;
@@ -31,18 +33,32 @@ impl StorageBackend for DirectoryBackend {
                 }
             }
         }
-
-        let new_file_name = format!("{}{}", base_name, max_num + 1);
-        //let mut file = File::create(Path::new(&self.path).join(new_file_name))?;
-        fs::copy(file_name, new_file_name)?;
-
+        // we now know which revision number this is
+        let full_file_name = format!("{}{}_{}", self.path, file_name_input, max_num + 1);
+        println!("{} copying to {}", file_name, full_file_name);
+        fs::copy(file_name, full_file_name);
 
         Ok(())
     }
 
-    fn load_file(&self, file_name: &str) -> Result<Vec<u8>, Box<dyn std::error::Error>> {
-        let full_path = format!("{}/{}", self.path, file_name);
-        let contents = std::fs::read(full_path)?;
-        Ok(contents)
+    fn load_file(&self, file_name: &str, version: u64) -> Result<(), Box<dyn std::error::Error>> {
+        let path = Path::new(file_name);
+        let file_name_input = path.file_name().unwrap().to_str().unwrap();
+        let working_folder = "/tmp/guardian_working_folder/";
+        let destination_file = working_folder.to_string() + file_name_input;
+        let target_file = format!("{file_name_input}_{version}");
+        // go through the repo directory looking for the requested file with that version number
+        for entry_result in fs::read_dir(self.path.clone())? {
+            let entry = entry_result?; // Each item is a Result<DirEntry, Error>
+            let path = entry.path();
+            let file_name_str = path.file_name().unwrap();
+
+            if *file_name_str == *target_file {
+                fs::copy(path, destination_file)?;
+                return Ok(());
+            }
+        }
+
+        Ok(())
     }
 }

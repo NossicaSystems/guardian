@@ -1,11 +1,11 @@
+use crate::config::Config;
 use std::fs;
 use std::path::Path;
-use crate::config::Config;
 mod directory_backend;
 
 pub trait StorageBackend {
     fn save_file(&self, file_name: &str) -> Result<(), Box<dyn std::error::Error>>;
-    fn load_file(&self, file_name: &str) -> Result<Vec<u8>, Box<dyn std::error::Error>>;
+    fn load_file(&self, file_name: &str, version: u64) -> Result<(), Box<dyn std::error::Error>>;
 }
 
 pub struct FileEntry {
@@ -33,21 +33,25 @@ impl FileEntry {
     }
 }
 
-pub struct DataStore{
+pub struct DataStore {
     pub backend: Option<Box<dyn StorageBackend>>,
 }
 
 impl DataStore {
     fn create_backend(config: Config) -> Box<dyn StorageBackend> {
         match config {
-            Config::Directory { path } => {
-                Box::new(directory_backend::DirectoryBackend { path })
-            },
-            Config::MySql { host, port, username, password, database } => {
+            Config::Directory { path } => Box::new(directory_backend::DirectoryBackend { path }),
+            Config::MySql {
+                host,
+                port: _,
+                username: _,
+                password: _,
+                database: _,
+            } => {
                 // Hypothetical future implementation
-                Box::new(directory_backend::DirectoryBackend { path:host })
+                Box::new(directory_backend::DirectoryBackend { path: host })
                 //Box::new(MySqlBackend::new(host, port, username, password, database))
-            },
+            }
         }
     }
     pub fn load_config(&mut self, config: Config) {
@@ -55,11 +59,13 @@ impl DataStore {
         self.backend = Some(Self::create_backend(config));
     }
 
-    pub fn save_file(&mut self,file_name: &str) {
+    pub fn save_file(&mut self, file_name: &str) {
         self.backend.as_ref().unwrap().save_file(file_name);
-        let backend = self.backend.as_ref().unwrap();
-        backend.save_file(file_name);
         println!("Saved file {file_name}");
     }
 
+    pub fn load_file(&self, file_name: &str, version: u64) {
+        self.backend.as_ref().unwrap().load_file(file_name, version);
+        println!("loaded file {file_name} version {version}");
+    }
 }

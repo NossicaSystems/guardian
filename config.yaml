@@ -1,7 +1,7 @@
 storage_type: Directory
 
 Directory:
-path: "C:/Users/steev/guardian_files"
+path: "/tmp/guardian_files/"
 
 MySql:
   host: "localhost"
