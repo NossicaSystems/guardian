@@ -28,15 +28,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut data_store = data::db::DataStore { backend: None };
     data_store.load_config(config);
 
-    //data_store.save_file("/home/st/guardian/guardian/src/test.txt");
-
     match cli.command {
         Commands::S { filename } => {
-            //let file = FileEntry::from_path(&filename)?;
             return Ok(data_store.save_file(&filename));
         }
         Commands::L { filename, version } => {
-            //let file = FileEntry::from_path(&filename)?;
             return Ok(data_store.load_file(&filename, version));
         }
         _ => return Ok(()),

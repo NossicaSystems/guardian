@@ -16,7 +16,9 @@ impl StorageBackend for DirectoryBackend {
         println!("repo path {} file to save {}", self.path, file_name_input);
 
         // check how many other versions of this file are present
-        let re = Regex::new(r"^test\.txt_(\d+)$").unwrap();
+        let escaped = regex::escape(file_name_input);
+        let pattern = format!(r"^{}_([0-9]+)$", escaped);
+        let re = Regex::new(&pattern).unwrap();
 
         let mut max_num = 0;
 
