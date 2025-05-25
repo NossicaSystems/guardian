@@ -38,7 +38,7 @@ impl StorageBackend for DirectoryBackend {
         // we now know which revision number this is
         let full_file_name = format!("{}{}_{}", self.path, file_name_input, max_num + 1);
         println!("{} copying to {}", file_name, full_file_name);
-        fs::copy(file_name, full_file_name);
+        let _ = fs::copy(file_name, full_file_name);
 
         Ok(())
     }

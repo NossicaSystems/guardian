@@ -60,12 +60,12 @@ impl DataStore {
     }
 
     pub fn save_file(&mut self, file_name: &str) {
-        self.backend.as_ref().unwrap().save_file(file_name);
+        let _ = self.backend.as_ref().unwrap().save_file(file_name);
         println!("Saved file {file_name}");
     }
 
     pub fn load_file(&self, file_name: &str, version: u64) {
-        self.backend.as_ref().unwrap().load_file(file_name, version);
+        let _ = self.backend.as_ref().unwrap().load_file(file_name, version);
         println!("loaded file {file_name} version {version}");
     }
 }
