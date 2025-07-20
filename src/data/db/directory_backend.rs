@@ -15,6 +15,7 @@ impl StorageBackend for DirectoryBackend {
 
         println!("repo path {} file to save {}", self.path, file_name_input);
 
+        // Could split this to a function that obtains version numbers
         // check how many other versions of this file are present
         let escaped = regex::escape(file_name_input);
         let pattern = format!(r"^{}_([0-9]+)$", escaped);
@@ -38,18 +39,27 @@ impl StorageBackend for DirectoryBackend {
         // we now know which revision number this is
         let full_file_name = format!("{}{}_{}", self.path, file_name_input, max_num + 1);
         println!("{} copying to {}", file_name, full_file_name);
+        // Should handle error here
         let _ = fs::copy(file_name, full_file_name);
 
         Ok(())
     }
 
+    // Is load the correct name for this? this looks like you are copying a file over
     fn load_file(&self, file_name: &str, version: u64) -> Result<(), Box<dyn std::error::Error>> {
         let path = Path::new(file_name);
         let file_name_input = path.file_name().unwrap().to_str().unwrap();
+        // Typically make a constant at the top for this
         let working_folder = "/tmp/guardian_working_folder/";
         let destination_file = working_folder.to_string() + file_name_input;
         let target_file = format!("{file_name_input}_{version}");
         // go through the repo directory looking for the requested file with that version number
+        // You are allocating on the heap here, not very efficient if used a lot
+        // You should also use an inline iterator for this, something like
+        //
+        // fs::read_dir(self.path.clone())?.find(|entry_result| ...)
+        // This could possibly be recursive? I'm not sure what assumptions you are making in this
+        // project
         for entry_result in fs::read_dir(self.path.clone())? {
             let entry = entry_result?; // Each item is a Result<DirEntry, Error>
             let path = entry.path();

@@ -18,11 +18,7 @@ pub struct FileEntry {
 impl FileEntry {
     pub fn from_path(path: &str) -> Result<Self, std::io::Error> {
         let contents = fs::read(path)?;
-        let filename = Path::new(path)
-            .file_name()
-            .unwrap()
-            .to_string_lossy()
-            .to_string();
+        let filename = Path::new(path).file_name().unwrap().to_string_lossy().to_string();
 
         Ok(FileEntry {
             filename,
@@ -34,6 +30,8 @@ impl FileEntry {
 }
 
 pub struct DataStore {
+    /// This has some performance implications, 3 pointer indirection, pointer to object vtable,
+    /// pointer to function vtable and then pointer to function
     pub backend: Option<Box<dyn StorageBackend>>,
 }
 
@@ -59,11 +57,13 @@ impl DataStore {
         self.backend = Some(Self::create_backend(config));
     }
 
+    /// No error here? Should return std::io::Result<()>
     pub fn save_file(&mut self, file_name: &str) {
         let _ = self.backend.as_ref().unwrap().save_file(file_name);
         println!("Saved file {file_name}");
     }
 
+    /// No error here? Should return std::io::Result<()>
     pub fn load_file(&self, file_name: &str, version: u64) {
         let _ = self.backend.as_ref().unwrap().load_file(file_name, version);
         println!("loaded file {file_name} version {version}");
